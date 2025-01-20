@@ -125,6 +125,8 @@ def transcribe(
     A dictionary containing the resulting text ("text") and segment-level details ("segments"), and
     the spoken language ("language"), which is detected when `decode_options["language"]` is None.
     """
+        progress_data = {"total": 0, "current": 0}
+    
     dtype = torch.float16 if decode_options.get("fp16", True) else torch.float32
     if model.device == torch.device("cpu"):
         if torch.cuda.is_available():
@@ -263,6 +265,12 @@ def transcribe(
     with tqdm.tqdm(
         total=content_frames, unit="frames", disable=verbose is not False
     ) as pbar:
+        
+        progress_data['total'] = content_frames
+        progress_data['current'] = 0
+        
+        progress_callback(progress_data)
+        
         last_speech_timestamp = 0.0
         # NOTE: This loop is obscurely flattened to make the diff readable.
         # A later commit should turn this into a simpler nested loop.
@@ -507,9 +515,9 @@ def transcribe(
             pbar.update(min(content_frames, seek) - previous_seek)
 
             # Emit progress through the callback
-            if progress_callback:
-                percent_complete = int((progress / content_frames) * 100)
-                progress_callback(percent_complete)
+            if progress_callback:               
+                progress_data['current'] += min(content_frames, seek) - previous_seek                
+                progress_callback(progress_data)
 
     return dict(
         text=tokenizer.decode(all_tokens[len(initial_prompt_tokens) :]),
