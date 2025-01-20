@@ -36,6 +36,7 @@ if TYPE_CHECKING:
 
 
 def transcribe(
+    progress_callback: Optional[Callable[[int], None]] = None,
     model: "Whisper",
     audio: Union[str, np.ndarray, torch.Tensor],
     *,
@@ -504,6 +505,11 @@ def transcribe(
 
             # update progress bar
             pbar.update(min(content_frames, seek) - previous_seek)
+
+            # Emit progress through the callback
+            if progress_callback:
+                percent_complete = int((progress / content_frames) * 100)
+                progress_callback(percent_complete)
 
     return dict(
         text=tokenizer.decode(all_tokens[len(initial_prompt_tokens) :]),
