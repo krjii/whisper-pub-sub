@@ -36,7 +36,6 @@ if TYPE_CHECKING:
 
 
 def transcribe(
-    progress_callback: Optional[Callable[[int], None]] = None,
     model: "Whisper",
     audio: Union[str, np.ndarray, torch.Tensor],
     *,
@@ -53,6 +52,7 @@ def transcribe(
     append_punctuations: str = "\"'.。,，!！?？:：”)]}、",
     clip_timestamps: Union[str, List[float]] = "0",
     hallucination_silence_threshold: Optional[float] = None,
+    progress_callback: Optional[Callable[[int], None]] = None,
     **decode_options,
 ):
     """
